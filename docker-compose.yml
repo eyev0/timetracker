@@ -8,6 +8,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - 8000:8000
+    depends_on:
+      - db
     volumes:
       - ./logs:/usr/app/logs
       - ./credentials.json:/usr/app/credentials.json
@@ -16,6 +18,8 @@ services:
     stop_signal: SIGINT
   db:
     image: postgres
+    env_file:
+      - app.env
     restart: always
     volumes:
       - dbdata:/var/lib/postgresql/data
