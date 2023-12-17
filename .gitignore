@@ -1,0 +1,6 @@
+bin/
+*.env
+vendor/
+__debug_bin*
+logs/
+credentials*.json
