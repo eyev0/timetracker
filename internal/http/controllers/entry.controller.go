@@ -26,7 +26,7 @@ func CreateEntry(ctx *gin.Context) {
 		return
 	}
 
-	entry := &model.Entry{Id: entryId, UserId: payload.UserId, Note: payload.Note}
+	entry := &model.Entry{Id: entryId, UserId: user.Id, Note: payload.Note}
 
 	if err := db.CreateEntry(entry, user); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"status": "fail", "message": err.Error()})
@@ -45,7 +45,7 @@ func UpdateEntry(ctx *gin.Context) {
 		return
 	}
 
-	entry, err := db.UpdateEntry(payload)
+	entry, err := db.UpdateEntry(user, payload)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"status": "fail", "message": err.Error()})
 		return

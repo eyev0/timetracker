@@ -45,7 +45,7 @@ func GetEntryById(tx *sqlx.Tx, entry *model.Entry) (err error) {
 	return
 }
 
-func UpdateEntry(req *model.UpdateEntryInput) (entry *model.Entry, err error) {
+func UpdateEntry(user *model.User, input *model.UpdateEntryInput) (entry *model.Entry, err error) {
 	db, err := Open()
 	if err != nil {
 		return
@@ -56,25 +56,25 @@ func UpdateEntry(req *model.UpdateEntryInput) (entry *model.Entry, err error) {
 	var end_timestamp, note, whereClause string
 	var varargs []any = make([]any, 0, 3)
 
-	varargs = append(varargs, req.UserId)
+	varargs = append(varargs, user.Id)
 
-	if req.EndDateTime != nil {
+	if input.EndDateTime != nil {
 		end_timestamp = fmt.Sprintf("$%d", len(varargs)+1)
-		varargs = append(varargs, req.EndDateTime)
+		varargs = append(varargs, input.EndDateTime)
 	} else {
 		end_timestamp = "now()"
 	}
 
-	if req.Note != nil {
+	if input.Note != nil {
 		note = fmt.Sprintf("$%d", len(varargs)+1)
-		varargs = append(varargs, req.Note)
+		varargs = append(varargs, input.Note)
 	} else {
 		note = "note"
 	}
 
-	if req.Id != nil {
+	if input.Id != nil {
 		whereClause = fmt.Sprintf("id = $%d", len(varargs)+1)
-		varargs = append(varargs, req.Id)
+		varargs = append(varargs, input.Id)
 	} else {
 		whereClause = "end_timestamp IS NULL"
 	}

@@ -45,12 +45,10 @@ type Entry struct {
 }
 
 type CreateEntryInput struct {
-	UserId string `json:"user_id" type:"int" doc:"User id"`
 	Note   string `json:"note" type:"string" doc:"Description of activity"`
 }
 
 type UpdateEntryInput struct {
-	UserId      uuid.UUID  `json:"user_id" doc:"User id"`
 	Id          *string    `json:"id,omitempty" type:"string"`
 	Note        *string    `json:"note,omitempty" type:"string"`
 	EndDateTime *time.Time `json:"end_datetime,omitempty" type:"string"`
