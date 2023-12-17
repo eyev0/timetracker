@@ -38,5 +38,5 @@ func Init() {
 	}
 	defer db.Close()
 
-	// InitSchema(db)
+	InitSchema(db)
 }
