@@ -13,7 +13,7 @@ tidy:
 vendor:
 	go mod vendor
 
-bin/timetracker:
+build:
 	go build -mod vendor -o ./bin/timetracker ./cmd/main.go
 
 .PHONY: docker-build
