@@ -17,7 +17,7 @@ bin/timetracker:
 	go build -mod vendor -o ./bin/timetracker ./cmd/main.go
 
 .PHONY: docker-build
-docker-build: vendor tidy
+docker-build:
 	docker build -t timetracker:latest ./
 
 .PHONY: docker-up
