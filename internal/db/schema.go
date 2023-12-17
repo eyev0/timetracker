@@ -3,6 +3,7 @@ package db
 import (
 	"github.com/jmoiron/sqlx"
 
+	"github.com/eyev0/timetracker/internal/log"
 	"github.com/eyev0/timetracker/internal/utils"
 )
 
@@ -47,4 +48,5 @@ create table google_tokens
 func InitSchema(db *sqlx.DB) {
 	defer utils.Recover_gracefully("Could not create schema")
 	db.MustExec(schema)
+	log.Logger.Infof("Successfully created database schema")
 }
