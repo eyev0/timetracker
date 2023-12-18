@@ -3,7 +3,10 @@ package cfg
 import (
 	"time"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
+
+	"github.com/eyev0/timetracker/internal/log"
 )
 
 func LoadConfig() (err error) {
@@ -17,6 +20,20 @@ func LoadConfig() (err error) {
 	}
 
 	v.AutomaticEnv()
+
+	v.OnConfigChange(func(e fsnotify.Event) {
+		log.Logger.Infof("Config file changed:", e.Name)
+		var c *Config
+		err := v.Unmarshal(&c)
+		if err != nil {
+			log.Logger.Errorf("Error unmarshaling config: %v", err)
+			log.Logger.Warnf("Changes to config were not applied!")
+		} else {
+			log.Logger.Infof("New config applied successfully")
+			C = c
+		}
+	})
+	v.WatchConfig()
 
 	err = v.Unmarshal(&C)
 	return
