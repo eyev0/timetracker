@@ -60,7 +60,6 @@ func GetCurrentUserEntry(user *model.User) (entry *model.Entry, err error) {
 	return
 }
 
-type SqlOption interface {}
 
 func UpdateEntry(user *model.User, input *model.UpdateEntryInput) (entry *model.Entry, tx *sqlx.Tx, err error) {
 	db, err := Open()
@@ -77,27 +76,25 @@ func UpdateEntry(user *model.User, input *model.UpdateEntryInput) (entry *model.
 
 	varargs = append(varargs, user.Id)
 
-	if input != nil {
-		if input.EndDateTime != nil {
-			end_timestamp = fmt.Sprintf("$%d", len(varargs)+1)
-			varargs = append(varargs, input.EndDateTime)
-		} else {
-			end_timestamp = "now()"
-		}
+	if input != nil && input.EndDateTime != nil {
+		end_timestamp = fmt.Sprintf("$%d", len(varargs)+1)
+		varargs = append(varargs, input.EndDateTime)
+	} else {
+		end_timestamp = "now()"
+	}
 
-		if input.Note != nil {
-			note = fmt.Sprintf("$%d", len(varargs)+1)
-			varargs = append(varargs, input.Note)
-		} else {
-			note = "note"
-		}
+	if input != nil && input.Note != nil {
+		note = fmt.Sprintf("$%d", len(varargs)+1)
+		varargs = append(varargs, input.Note)
+	} else {
+		note = "note"
+	}
 
-		if input.Id != nil {
-			whereClause = fmt.Sprintf("id = $%d", len(varargs)+1)
-			varargs = append(varargs, input.Id)
-		} else {
-			whereClause = "end_timestamp IS NULL"
-		}
+	if input != nil && input.Id != nil {
+		whereClause = fmt.Sprintf("id = $%d", len(varargs)+1)
+		varargs = append(varargs, input.Id)
+	} else {
+		whereClause = "end_timestamp IS NULL"
 	}
 
 	stmt := fmt.Sprintf(template, end_timestamp, note, whereClause)
