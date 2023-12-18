@@ -36,16 +36,26 @@ type Token struct {
 }
 
 type Entry struct {
-	Id            uuid.UUID  `db:"id" json:"id,omitempty"`
-	UserId        string     `db:"user_id" json:"user_id"`
-	StartDateTime time.Time  `db:"start_timestamp" json:"start_datetime,omitempty"`
-	EndDateTime   *time.Time `db:"end_timestamp" json:"end_datetime,omitempty"`
-	Note          string     `db:"note" json:"note"`
-	CalendarId    string     `db:"calendar_id" json:"calendar_id"`
+	Id             uuid.UUID  `db:"id" json:"id,omitempty"`
+	UserId         string     `db:"user_id" json:"user_id"`
+	StartDateTime  time.Time  `db:"start_timestamp" json:"start_datetime,omitempty"`
+	ElapsedSeconds int        `json:"elapsed_seconds"`
+	ElapsedMinutes int        `json:"elapsed_minutes"`
+	ElapsedHours   int        `json:"elapsed_hours"`
+	EndDateTime    *time.Time `db:"end_timestamp" json:"end_datetime,omitempty"`
+	Note           string     `db:"note" json:"note"`
+	CalendarId     string     `db:"calendar_id" json:"calendar_id"`
+}
+
+func (entry *Entry) CalcElapsed(now time.Time) {
+	elapsed := now.Sub(entry.StartDateTime)
+	entry.ElapsedSeconds = int(elapsed/time.Second) % 60
+	entry.ElapsedMinutes = int(elapsed/time.Minute) % 60
+	entry.ElapsedHours = int(elapsed / time.Hour)
 }
 
 type CreateEntryInput struct {
-	Note   string `json:"note" type:"string" doc:"Description of activity"`
+	Note string `json:"note" type:"string" doc:"Description of activity"`
 }
 
 type UpdateEntryInput struct {

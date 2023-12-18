@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -40,6 +41,7 @@ func CreateEntry(ctx *gin.Context) {
 }
 
 func UpdateEntry(ctx *gin.Context) {
+	now := time.Now()
 	user := ctx.MustGet("currentUser").(*model.User)
 
 	var payload *model.UpdateEntryInput
@@ -65,6 +67,8 @@ func UpdateEntry(ctx *gin.Context) {
 		return
 	}
 
+	entry.CalcElapsed(now)
+
 	err = calendar.PostEvent(user, entry)
 	if err != nil {
 		rollbackErr := tx.Rollback()
@@ -88,6 +92,7 @@ func UpdateEntry(ctx *gin.Context) {
 }
 
 func GetEntry(ctx *gin.Context) {
+	now := time.Now()
 	user := ctx.MustGet("currentUser").(*model.User)
 
 	entry, err := db.GetCurrentUserEntry(user)
@@ -101,5 +106,6 @@ func GetEntry(ctx *gin.Context) {
 		}
 	}
 
+	entry.CalcElapsed(now)
 	ctx.JSON(http.StatusOK, gin.H{"status": "success", "data": gin.H{"entry": entry}})
 }
