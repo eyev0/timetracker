@@ -1,3 +1,8 @@
+.gitignore
 bin/
 __debug_bin*
 logs/
+app.env
+auth.env
+credentials.json
+Makefile
