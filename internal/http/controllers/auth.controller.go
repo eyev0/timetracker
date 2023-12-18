@@ -80,7 +80,7 @@ func SignInUser(ctx *gin.Context) {
 
 	ctx.SetCookie("token", token, int(cfg.C.TokenExpiresIn/time.Second), "/", "localhost", false, true)
 
-	ctx.JSON(http.StatusOK, gin.H{"status": "success"})
+	ctx.JSON(http.StatusOK, gin.H{"status": "success", "token": token})
 }
 
 func LogoutUser(ctx *gin.Context) {
