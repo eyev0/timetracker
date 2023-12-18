@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/eyev0/timetracker/internal/config"
+	"github.com/eyev0/timetracker/internal/cfg"
 	"github.com/eyev0/timetracker/internal/db"
 	"github.com/eyev0/timetracker/internal/utils"
 )
@@ -30,8 +30,7 @@ func DeserializeUser(ctx *gin.Context) {
 		return
 	}
 
-	config, _ := config.LoadConfig(".")
-	sub, err := utils.ValidateJwt(token, config.JWTTokenSecret)
+	sub, err := utils.ValidateJwt(token, cfg.C.JWTTokenSecret)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": err.Error()})
 		return

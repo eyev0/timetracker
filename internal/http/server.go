@@ -6,17 +6,17 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	config "github.com/spf13/viper"
 
+	"github.com/eyev0/timetracker/internal/cfg"
 	"github.com/eyev0/timetracker/internal/http/controllers"
 	"github.com/eyev0/timetracker/internal/http/middleware"
 	"github.com/eyev0/timetracker/internal/log"
 )
 
-func InitHttpServer() {
+func InitServer() {
 	server := gin.Default()
 
-	addr := fmt.Sprintf("%s:%d", config.GetString("SERVER_IP"), config.GetInt("SERVER_PORT"))
+	addr := fmt.Sprintf("%s:%d", cfg.C.ServerIP, cfg.C.ServerPort)
 
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = []string{"http://localhost:3000", "http://127.0.0.1:3000"}

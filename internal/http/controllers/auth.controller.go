@@ -11,7 +11,7 @@ import (
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/calendar/v3"
 
-	"github.com/eyev0/timetracker/internal/config"
+	"github.com/eyev0/timetracker/internal/cfg"
 	"github.com/eyev0/timetracker/internal/db"
 	"github.com/eyev0/timetracker/internal/google_api"
 	"github.com/eyev0/timetracker/internal/log"
@@ -70,17 +70,15 @@ func SignInUser(ctx *gin.Context) {
 		return
 	}
 
-	config, _ := config.LoadConfig(".")
+	log.Logger.Info("Expires in: %+v", cfg.C.TokenExpiresIn)
 
-	log.Logger.Info("Expires in: %+v", config.TokenExpiresIn)
-
-	token, err := utils.GenerateJwt(config.TokenExpiresIn, user.Id, config.JWTTokenSecret)
+	token, err := utils.GenerateJwt(cfg.C.TokenExpiresIn, user.Id, cfg.C.JWTTokenSecret)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": err.Error()})
 		return
 	}
 
-	ctx.SetCookie("token", token, int(config.TokenExpiresIn/time.Second), "/", "localhost", false, true)
+	ctx.SetCookie("token", token, int(cfg.C.TokenExpiresIn/time.Second), "/", "localhost", false, true)
 
 	ctx.JSON(http.StatusOK, gin.H{"status": "success"})
 }
@@ -148,17 +146,15 @@ func GoogleOAuth(ctx *gin.Context) {
 		return
 	}
 
-	config, _ := config.LoadConfig(".")
-
-	token, err := utils.GenerateJwt(config.TokenExpiresIn, user.Id, config.JWTTokenSecret)
+	token, err := utils.GenerateJwt(cfg.C.TokenExpiresIn, user.Id, cfg.C.JWTTokenSecret)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": err.Error()})
 		return
 	}
 
-	ctx.SetCookie("token", token, config.TokenMaxAge*60, "/", "localhost", false, true)
+	ctx.SetCookie("token", token, cfg.C.TokenMaxAge*60, "/", "localhost", false, true)
 
-	ctx.Redirect(http.StatusTemporaryRedirect, fmt.Sprint(config.FrontEndOrigin, pathUrl))
+	ctx.Redirect(http.StatusTemporaryRedirect, fmt.Sprint(cfg.C.FrontEndOrigin, pathUrl))
 }
 
 func RefreshToken(ctx *gin.Context) {

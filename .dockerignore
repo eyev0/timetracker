@@ -1,4 +1,5 @@
 .gitignore
+.git
 bin/
 __debug_bin*
 logs/

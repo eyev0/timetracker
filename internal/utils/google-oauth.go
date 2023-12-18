@@ -10,7 +10,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/eyev0/timetracker/internal/config"
+	"github.com/eyev0/timetracker/internal/cfg"
 	"github.com/eyev0/timetracker/internal/log"
 	"github.com/eyev0/timetracker/internal/model"
 )
@@ -28,13 +28,12 @@ func GetGoogleOauthToken(code string) (*model.Token, error) {
 	var result model.Result[*model.Token]
 
 	const rootURl = "https://oauth2.googleapis.com/token"
-	config, _ := config.LoadConfig(".")
 	values := url.Values{}
 	values.Add("grant_type", "authorization_code")
 	values.Add("code", code)
-	values.Add("client_id", config.GoogleClientID)
-	values.Add("client_secret", config.GoogleClientSecret)
-	values.Add("redirect_uri", config.GoogleOAuthRedirectUrl)
+	values.Add("client_id", cfg.C.GoogleClientID)
+	values.Add("client_secret", cfg.C.GoogleClientSecret)
+	values.Add("redirect_uri", cfg.C.GoogleOAuthRedirectUrl)
 
 	query := values.Encode()
 

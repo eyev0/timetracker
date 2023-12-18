@@ -2,9 +2,6 @@
 .PHONY: test
 .PHONY: clean
 
-include app.env
-export
-
 .PHONY: tidy
 tidy:
 	go mod tidy

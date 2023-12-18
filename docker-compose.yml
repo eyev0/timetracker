@@ -8,6 +8,9 @@ services:
       dockerfile: Dockerfile
     ports:
       - 8000:8000
+    environment:
+      - SERVER_IP=0.0.0.0
+      - DATABASE_HOST=db
     depends_on:
       - db
     volumes:
@@ -19,7 +22,7 @@ services:
   db:
     image: postgres
     env_file:
-      - app.env
+      - .env
     restart: always
     volumes:
       - dbdata:/var/lib/postgresql/data

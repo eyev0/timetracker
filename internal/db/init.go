@@ -5,8 +5,8 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
-	config "github.com/spf13/viper"
 
+	"github.com/eyev0/timetracker/internal/cfg"
 	"github.com/eyev0/timetracker/internal/log"
 )
 
@@ -16,11 +16,12 @@ func Open() (db *sqlx.DB, err error) {
 	if Url == nil {
 		Url = new(string)
 		*Url = fmt.Sprintf(
-			"postgres://%s:%s@%s/%s",
-			config.GetString("POSTGRES_USER"),
-			config.GetString("POSTGRES_PASSWORD"),
-			config.GetString("DATABASE_ADDRESS"),
-			config.GetString("DATABASE_DB"),
+			"postgres://%s:%s@%s:%d/%s",
+			cfg.C.PostgresUser,
+			cfg.C.PostgresPassword,
+			cfg.C.DatabaseHost,
+			cfg.C.DatabasePort,
+			cfg.C.DatabaseDb,
 		)
 	}
 	db, err = sqlx.Open("pgx", *Url)
@@ -37,6 +38,8 @@ func Init() {
 		log.Logger.Fatalf("Failed to open db: %+v\n", err)
 	}
 	defer db.Close()
+
+	db.MustExec("SELECT 1")
 
 	InitSchema(db)
 }
