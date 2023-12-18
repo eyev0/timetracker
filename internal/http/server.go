@@ -47,6 +47,7 @@ func InitHttpServer() {
 	entriesRouter := apiRouter.Group("/entries", middleware.DeserializeUser)
 	entriesRouter.POST("/create", controllers.CreateEntry)
 	entriesRouter.POST("/update", controllers.UpdateEntry)
+	entriesRouter.GET("/current", controllers.GetEntry)
 
 	// router.StaticFS("/images", http.Dir("public"))
 	server.NoRoute(func(ctx *gin.Context) {

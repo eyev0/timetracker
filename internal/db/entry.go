@@ -45,12 +45,31 @@ func GetEntryById(tx *sqlx.Tx, entry *model.Entry) (err error) {
 	return
 }
 
-func UpdateEntry(user *model.User, input *model.UpdateEntryInput) (entry *model.Entry, err error) {
+func GetCurrentUserEntry(user *model.User) (entry *model.Entry, err error) {
 	db, err := Open()
 	if err != nil {
 		return
 	}
 	defer db.Close()
+
+	row := db.QueryRowx("SELECT * FROM entries WHERE user_id = $1 AND end_timestamp is null", user.Id)
+	entry = new(model.Entry)
+	err = row.StructScan(entry)
+	log.Logger.Debugf("GetCurrentUserEntry result: %+v", entry)
+
+	return
+}
+
+type SqlOption interface {}
+
+func UpdateEntry(user *model.User, input *model.UpdateEntryInput) (entry *model.Entry, tx *sqlx.Tx, err error) {
+	db, err := Open()
+	if err != nil {
+		return
+	}
+	defer db.Close()
+
+	tx = db.MustBegin()
 
 	template := "UPDATE entries SET end_timestamp = %s, note = %s WHERE user_id = $1 AND %s RETURNING *"
 	var end_timestamp, note, whereClause string
@@ -58,29 +77,31 @@ func UpdateEntry(user *model.User, input *model.UpdateEntryInput) (entry *model.
 
 	varargs = append(varargs, user.Id)
 
-	if input.EndDateTime != nil {
-		end_timestamp = fmt.Sprintf("$%d", len(varargs)+1)
-		varargs = append(varargs, input.EndDateTime)
-	} else {
-		end_timestamp = "now()"
-	}
+	if input != nil {
+		if input.EndDateTime != nil {
+			end_timestamp = fmt.Sprintf("$%d", len(varargs)+1)
+			varargs = append(varargs, input.EndDateTime)
+		} else {
+			end_timestamp = "now()"
+		}
 
-	if input.Note != nil {
-		note = fmt.Sprintf("$%d", len(varargs)+1)
-		varargs = append(varargs, input.Note)
-	} else {
-		note = "note"
-	}
+		if input.Note != nil {
+			note = fmt.Sprintf("$%d", len(varargs)+1)
+			varargs = append(varargs, input.Note)
+		} else {
+			note = "note"
+		}
 
-	if input.Id != nil {
-		whereClause = fmt.Sprintf("id = $%d", len(varargs)+1)
-		varargs = append(varargs, input.Id)
-	} else {
-		whereClause = "end_timestamp IS NULL"
+		if input.Id != nil {
+			whereClause = fmt.Sprintf("id = $%d", len(varargs)+1)
+			varargs = append(varargs, input.Id)
+		} else {
+			whereClause = "end_timestamp IS NULL"
+		}
 	}
 
 	stmt := fmt.Sprintf(template, end_timestamp, note, whereClause)
-	row := db.QueryRowx(
+	row := tx.QueryRowx(
 		stmt,
 		varargs...,
 	)
