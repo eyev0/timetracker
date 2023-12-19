@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 
@@ -31,8 +32,6 @@ func CreateEntry(entry *model.Entry, user *model.User) (err error) {
 	}
 	log.Logger.Debugf("CreateEntry result: %+v", entry)
 
-	log.Logger.Debugf("CreateEntry result: %+v", entry)
-
 	return
 }
 
@@ -55,11 +54,17 @@ func GetCurrentUserEntry(user *model.User) (entry *model.Entry, err error) {
 	row := db.QueryRowx("SELECT * FROM entries WHERE user_id = $1 AND end_timestamp is null", user.Id)
 	entry = new(model.Entry)
 	err = row.StructScan(entry)
+	if err != nil {
+		if strings.Contains(err.Error(), "no rows in result set") {
+			log.Logger.Infof("%s", err)
+		} else {
+			log.Logger.Errorf("%v", err)
+		}
+	}
 	log.Logger.Debugf("GetCurrentUserEntry result: %+v", entry)
 
 	return
 }
-
 
 func UpdateEntry(user *model.User, input *model.UpdateEntryInput) (entry *model.Entry, tx *sqlx.Tx, err error) {
 	db, err := Open()
@@ -76,21 +81,21 @@ func UpdateEntry(user *model.User, input *model.UpdateEntryInput) (entry *model.
 
 	varargs = append(varargs, user.Id)
 
-	if input != nil && input.EndDateTime != nil {
+	if input.EndDateTime != nil {
 		end_timestamp = fmt.Sprintf("$%d", len(varargs)+1)
 		varargs = append(varargs, input.EndDateTime)
 	} else {
 		end_timestamp = "now()"
 	}
 
-	if input != nil && input.Note != nil {
+	if input.Note != nil {
 		note = fmt.Sprintf("$%d", len(varargs)+1)
 		varargs = append(varargs, input.Note)
 	} else {
 		note = "note"
 	}
 
-	if input != nil && input.Id != nil {
+	if input.Id != nil {
 		whereClause = fmt.Sprintf("id = $%d", len(varargs)+1)
 		varargs = append(varargs, input.Id)
 	} else {
@@ -102,11 +107,15 @@ func UpdateEntry(user *model.User, input *model.UpdateEntryInput) (entry *model.
 		stmt,
 		varargs...,
 	)
+
 	entry = new(model.Entry)
 	err = row.StructScan(entry)
 	if err != nil {
-		log.Logger.Errorf("%+v", err)
-		return
+		if strings.Contains(err.Error(), "no rows in result set") {
+			log.Logger.Infof("%s", err)
+		} else {
+			log.Logger.Errorf("%v", err)
+		}
 	}
 
 	return

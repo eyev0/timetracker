@@ -1,6 +1,8 @@
 package db
 
 import (
+	"strings"
+
 	"github.com/eyev0/timetracker/internal/log"
 	"github.com/eyev0/timetracker/internal/model"
 )
@@ -14,7 +16,7 @@ func CreateUser(user *model.User) (err error) {
 
 	res, err := db.Exec("INSERT INTO users (name, email, password) VALUES ($1, $2, $3)", user.Name, user.Email, user.Password)
 	if err != nil {
-		log.Logger.Errorf("%+v", err)
+		log.Logger.Errorf("%v", err)
 		return
 	}
 	log.Logger.Debugf("Insert result: %+v", res)
@@ -29,11 +31,16 @@ func GetUserByEmail(email string) (user *model.User, err error) {
 	}
 	defer db.Close()
 
-	row  := db.QueryRowx("SELECT * from users WHERE email = $1", email)
+	row := db.QueryRowx("SELECT * from users WHERE email = $1", email)
 	user = new(model.User)
+
 	err = row.StructScan(user)
 	if err != nil {
-		log.Logger.Errorf("%+v", err)
+		if strings.Contains(err.Error(), "no rows in result set") {
+			log.Logger.Infof("%s", err)
+		} else {
+			log.Logger.Errorf("%v", err)
+		}
 		return
 	}
 	log.Logger.Debugf("GetUserByEmail result: %+v", user)
@@ -48,11 +55,15 @@ func GetUserById(id string) (user *model.User, err error) {
 	}
 	defer db.Close()
 
-	row  := db.QueryRowx("SELECT * from users WHERE id = $1", id)
+	row := db.QueryRowx("SELECT * from users WHERE id = $1", id)
 	user = new(model.User)
 	err = row.StructScan(user)
 	if err != nil {
-		log.Logger.Errorf("%+v", err)
+		if strings.Contains(err.Error(), "no rows in result set") {
+			log.Logger.Infof("%s", err)
+		} else {
+			log.Logger.Errorf("%v", err)
+		}
 		return
 	}
 	log.Logger.Debugf("GetUserById result: %+v", user)

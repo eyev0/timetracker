@@ -15,14 +15,21 @@ import (
 	"github.com/eyev0/timetracker/internal/model"
 )
 
-func stopCurrent(user *model.User, now time.Time) (entry *model.Entry, err error) {
-	entry, tx, err := db.UpdateEntry(user, nil)
+func updateCurrentEntry(user *model.User, payload *model.UpdateEntryInput, now time.Time) (entry *model.Entry, code int, status string, err error) {
+	entry, tx, err := db.UpdateEntry(user, payload)
+	status = "fail"
 	if err != nil {
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
 			err = errors.Join(rollbackErr, err)
+			log.Logger.Errorf("%v", err)
 		}
-		log.Logger.Errorf("%v", err)
+		if strings.Contains(err.Error(), "no rows in result set") {
+			code = http.StatusNotFound
+			status = "not found"
+		} else {
+			code = http.StatusInternalServerError
+		}
 		return
 	}
 
@@ -33,12 +40,20 @@ func stopCurrent(user *model.User, now time.Time) (entry *model.Entry, err error
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
 			err = errors.Join(rollbackErr, err)
+			log.Logger.Errorf("%v", err)
 		}
-		log.Logger.Errorf("%v", err)
+		code = http.StatusInternalServerError
 		return
 	}
 
 	err = tx.Commit()
+	if err != nil {
+		code = http.StatusInternalServerError
+		return
+	}
+
+	code = http.StatusOK
+	status = "success"
 	return
 }
 
@@ -63,9 +78,11 @@ func CreateEntry(ctx *gin.Context) {
 			return
 		}
 	} else {
-		currentEntry, err = stopCurrent(user, now)
+		var code int
+		var status string
+		currentEntry, code, status, err = updateCurrentEntry(user, &model.UpdateEntryInput{}, now)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"status": "fail", "message": err.Error()})
+			ctx.JSON(code, gin.H{"status": status, "message": err.Error()})
 			return
 		}
 	}
@@ -95,38 +112,14 @@ func UpdateEntry(ctx *gin.Context) {
 		if err.Error() == "EOF" {
 			// no payload = ok
 		} else {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"status": "fail", "message": err.Error()})
+			ctx.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": err.Error()})
 			return
 		}
 	}
 
-	entry, tx, err := db.UpdateEntry(user, payload)
+	entry, code, status, err := updateCurrentEntry(user, payload, now)
 	if err != nil {
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = errors.Join(rollbackErr, err)
-		}
-		log.Logger.Error("%v", rollbackErr)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"status": "fail", "message": err.Error()})
-		return
-	}
-
-	entry.CalcElapsed(now)
-
-	err = calendar.PostEvent(user, entry)
-	if err != nil {
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = errors.Join(rollbackErr, err)
-		}
-		log.Logger.Error("%v", rollbackErr)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"status": "fail", "message": err.Error()})
-		return
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"status": "fail", "message": err.Error()})
+		ctx.JSON(code, gin.H{"status": status, "message": err.Error()})
 		return
 	}
 
@@ -140,7 +133,7 @@ func GetEntry(ctx *gin.Context) {
 	entry, err := db.GetCurrentUserEntry(user)
 	if err != nil {
 		if strings.Contains(err.Error(), "no rows in result set") {
-			ctx.JSON(http.StatusNotFound, gin.H{"status": "fail", "message": "Not found"})
+			ctx.JSON(http.StatusNotFound, gin.H{"status": "not found"})
 			return
 		} else {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"status": "fail", "message": err.Error()})
