@@ -44,6 +44,7 @@ var C *Config
 type Config struct {
 	ServerIP   string `mapstructure:"SERVER_IP"`
 	ServerPort int    `mapstructure:"SERVER_PORT"`
+	GinMode    string `mapstructure:"GIN_MODE"`
 
 	LogFilepath string `mapstructure:"LOG_FILEPATH"`
 	LogLevel    string `mapstructure:"LOG_LEVEL"`

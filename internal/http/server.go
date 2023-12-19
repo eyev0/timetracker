@@ -14,6 +14,7 @@ import (
 )
 
 func InitServer() {
+	gin.SetMode(cfg.C.GinMode)
 	server := gin.Default()
 
 	addr := fmt.Sprintf("%s:%d", cfg.C.ServerIP, cfg.C.ServerPort)

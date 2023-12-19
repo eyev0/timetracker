@@ -11,6 +11,7 @@ services:
     environment:
       - SERVER_IP=0.0.0.0
       - DATABASE_HOST=db
+      - GIN_MODE=release
     depends_on:
       - db
     volumes:
