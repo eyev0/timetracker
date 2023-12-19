@@ -70,7 +70,7 @@ func SignInUser(ctx *gin.Context) {
 		return
 	}
 
-	log.Logger.Info("Expires in: %+v", cfg.C.TokenExpiresIn)
+	log.Logger.Debugf("Expires in: %+v", cfg.C.TokenExpiresIn)
 
 	token, err := utils.GenerateJwt(cfg.C.TokenExpiresIn, user.Id, cfg.C.JWTTokenSecret)
 	if err != nil {
