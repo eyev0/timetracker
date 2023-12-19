@@ -35,15 +35,17 @@ func updateCurrentEntry(user *model.User, payload *model.UpdateEntryInput, now t
 
 	entry.CalcElapsed(now)
 
-	err = calendar.PostEvent(user, entry)
-	if err != nil {
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = errors.Join(rollbackErr, err)
-			log.Logger.Errorf("%v", err)
+	if !payload.NoSync {
+		err = calendar.PostEvent(user, entry)
+		if err != nil {
+			rollbackErr := tx.Rollback()
+			if rollbackErr != nil {
+				err = errors.Join(rollbackErr, err)
+				log.Logger.Errorf("%v", err)
+			}
+			code = http.StatusInternalServerError
+			return
 		}
-		code = http.StatusInternalServerError
-		return
 	}
 
 	err = tx.Commit()
@@ -111,6 +113,7 @@ func UpdateEntry(ctx *gin.Context) {
 	if err := ctx.ShouldBindJSON(&payload); err != nil {
 		if err.Error() == "EOF" {
 			// no payload = ok
+			payload = &model.UpdateEntryInput{}
 		} else {
 			ctx.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": err.Error()})
 			return

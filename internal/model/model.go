@@ -62,6 +62,7 @@ type UpdateEntryInput struct {
 	Id          *string    `json:"id,omitempty" type:"string"`
 	Note        *string    `json:"note,omitempty" type:"string"`
 	EndDateTime *time.Time `json:"end_datetime,omitempty" type:"string"`
+	NoSync      bool       `json:"no_sync,omitempty"`
 }
 
 type RegisterUserInput struct {
